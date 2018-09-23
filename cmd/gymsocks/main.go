@@ -64,7 +64,11 @@ func scan() {
 			is := isOnline(v.Address)
 			if is != v.Online {
 				v.Online = is
-				DB.Id(v.Id).Update(v)
+				v.LastUpdated = time.Now()
+				_, err := DB.Id(v.Id).Cols("online", "last_updated").Update(v)
+				if err != nil {
+					yo.Println(err)
+				}
 			}
 		}
 	}
