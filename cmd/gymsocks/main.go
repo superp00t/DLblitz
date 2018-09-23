@@ -61,13 +61,11 @@ func scan() {
 		for _, v := range ss {
 			yo.Println("Scanning", v)
 			is := isOnline(v.Address)
-			if is != v.Online {
-				v.Online = is
-				v.LastUpdated = time.Now()
-				_, err := DB.Id(v.Id).Cols("online", "last_updated").Update(v)
-				if err != nil {
-					yo.Println(err)
-				}
+			v.Online = is
+			v.LastUpdated = time.Now()
+			_, err := DB.Id(v.Id).Cols("online", "last_updated").Update(v)
+			if err != nil {
+				yo.Println(err)
 			}
 		}
 		time.Sleep(2 * time.Minute)
