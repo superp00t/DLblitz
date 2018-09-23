@@ -25,7 +25,7 @@ type Client struct {
 	ForceOverlay bool
 	DiscoServer  string
 
-	BackupProxy string
+	Socks5Proxies []string
 }
 
 type PeerInfo struct {

@@ -5,7 +5,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"net/url"
 
 	"golang.org/x/net/proxy"
 )
@@ -39,20 +38,18 @@ func Req(forceAnonymity bool, method, url string, body io.ReadCloser) (int, io.R
 	if !forceAnonymity && !torEnabled {
 		cl = &http.Client{}
 	} else {
-		pr, err := AcquireProxy(torURL)
+		var err error
+		cl, err = AcquireHTTPClient(torURL)
 		if err != nil {
 			return 0, nil, err
 		}
-
-		tr := &http.Transport{
-			Dial: pr,
-		}
-
-		cl = &http.Client{
-			Transport: tr,
-		}
 	}
 
+	return HReq(cl, method, url, body)
+
+}
+
+func HReq(h *http.Client, method, url string, body io.ReadCloser) (int, io.Reader, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return 0, nil, err
@@ -60,7 +57,7 @@ func Req(forceAnonymity bool, method, url string, body io.ReadCloser) (int, io.R
 
 	req.Header.Set("User-Agent", UserAgent)
 
-	resp, err := cl.Do(req)
+	resp, err := h.Do(req)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -69,13 +66,26 @@ func Req(forceAnonymity bool, method, url string, body io.ReadCloser) (int, io.R
 }
 
 func AcquireProxy(urls string) (func(string, string) (net.Conn, error), error) {
-	tbProxyURL, err := url.Parse(urls)
+	dl, err := proxy.SOCKS5("tcp", urls, nil, proxy.Direct)
 	if err != nil {
 		return nil, err
 	}
-	tbDialer, err := proxy.FromURL(tbProxyURL, proxy.Direct)
+	return dl.Dial, nil
+}
+
+func AcquireHTTPClient(urls string) (*http.Client, error) {
+	pr, err := AcquireProxy(urls)
 	if err != nil {
 		return nil, err
 	}
-	return tbDialer.Dial, nil
+
+	tr := &http.Transport{
+		Dial: pr,
+	}
+
+	cl := &http.Client{
+		Transport: tr,
+	}
+
+	return cl, nil
 }

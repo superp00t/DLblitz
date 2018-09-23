@@ -5,17 +5,22 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sync"
 	"time"
+
+	"github.com/superp00t/DLblitz/bnet"
+
+	"github.com/superp00t/etc"
 
 	pt "github.com/andanhm/go-prettytime"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 	"github.com/gorilla/mux"
 	"github.com/superp00t/etc/yo"
-	"golang.org/x/net/proxy"
 )
 
 var DB *xorm.Engine
+var Bucket = new(sync.Map)
 
 type SocksServer struct {
 	Id          int64     `json:"id"`
@@ -32,8 +37,40 @@ type SocksTpl struct {
 }
 
 func isOnline(socks5server string) bool {
-	_, err := proxy.SOCKS5("tcp", socks5server, nil, proxy.Direct)
-	return err == nil
+	confirmationToken := etc.GenerateRandomUUID().String()
+	conf := make(chan bool)
+	cancel := make(chan struct{})
+
+	Bucket.Store(confirmationToken, conf)
+
+	go func() {
+		hc, err := bnet.AcquireHTTPClient(socks5server)
+		if err != nil {
+			cancel <- struct{}{}
+			return
+		}
+
+		st, _, err := bnet.HReq(hc, "GET", yo.StringG("c")+"/cb/"+confirmationToken, nil)
+		if err != nil || st != 200 {
+			cancel <- struct{}{}
+			return
+		}
+	}()
+
+	select {
+	case <-conf:
+		close(conf)
+		Bucket.Delete(confirmationToken)
+		return true
+	case <-cancel:
+		close(conf)
+		Bucket.Delete(confirmationToken)
+		return false
+	case <-time.After(20 * time.Second):
+		close(conf)
+		Bucket.Delete(confirmationToken)
+		return false
+	}
 }
 
 func scan() {
@@ -74,6 +111,7 @@ func scan() {
 
 func main() {
 	yo.Stringf("d", "database", "SQL database to store ips", "")
+	yo.Stringf("c", "callbackURL", "the public URL of this server", "https://gymsocks.pg.ikrypto.club/")
 
 	yo.AddSubroutine("serve", []string{"address"}, "serve socks address info over HTTP", func(args []string) {
 		var err error
@@ -101,6 +139,21 @@ func main() {
 			for _, v := range ss {
 				fmt.Fprintf(rw, "%s\n", v.Address)
 			}
+		})
+
+		r.HandleFunc("/cb/{token}", func(rw http.ResponseWriter, r *http.Request) {
+			uuid := mux.Vars(r)["token"]
+
+			ch, ok := Bucket.Load(uuid)
+			if !ok {
+				return
+			}
+
+			go func() {
+				yo.Println("Got callback from proxy for ", uuid)
+				c := ch.(chan bool)
+				c <- true
+			}()
 		})
 
 		r.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
