@@ -56,7 +56,6 @@ func scan() {
 	}
 
 	for {
-		time.Sleep(2 * time.Minute)
 		var ss []SocksServer
 		DB.Find(&ss)
 		for _, v := range ss {
@@ -71,6 +70,7 @@ func scan() {
 				}
 			}
 		}
+		time.Sleep(2 * time.Minute)
 	}
 }
 
