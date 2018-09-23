@@ -38,8 +38,7 @@ func isOnline(socks5server string) bool {
 
 func scan() {
 	ct, err := DB.Count(new(SocksServer))
-	if err == nil || ct > 0 {
-		DB.DropTables(new(SocksServer))
+	if err != nil || ct == 0 {
 		err := DB.Sync2(new(SocksServer))
 		if err != nil {
 			yo.Fatal(err)
