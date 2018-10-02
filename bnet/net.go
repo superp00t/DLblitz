@@ -71,7 +71,21 @@ func init() {
 	}
 }
 
-func Req(forceAnonymity bool, method, url string, body io.ReadCloser) (int, io.Reader, error) {
+type ReqReader struct {
+	bar   *pb.ProgressBar
+	proxy *pb.Reader
+}
+
+func (r *ReqReader) Read(b []byte) (int, error) {
+	return r.proxy.Read(b)
+}
+
+func (r *ReqReader) Close() error {
+	r.bar.Finish()
+	return r.proxy.Close()
+}
+
+func Req(forceAnonymity bool, method, url string, body io.ReadCloser) (int, *ReqReader, error) {
 	if forceAnonymity && !torEnabled {
 		return 0, nil, fmt.Errorf("Tor could not be enabled")
 	}
@@ -91,7 +105,7 @@ func Req(forceAnonymity bool, method, url string, body io.ReadCloser) (int, io.R
 
 }
 
-func HReq(h *http.Client, method, url string, body io.ReadCloser) (int, io.Reader, error) {
+func HReq(h *http.Client, method, url string, body io.ReadCloser) (int, *ReqReader, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return 0, nil, err
@@ -108,7 +122,9 @@ func HReq(h *http.Client, method, url string, body io.ReadCloser) (int, io.Reade
 	bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES)
 	bar.Start()
 
-	return resp.StatusCode, bar.NewProxyReader(resp.Body), err
+	rr := &ReqReader{bar, bar.NewProxyReader(resp.Body)}
+
+	return resp.StatusCode, rr, err
 }
 
 func AcquireProxy(urls string) (func(string, string) (net.Conn, error), error) {

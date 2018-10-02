@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cheggaaa/pb"
 	"github.com/superp00t/DLblitz/bnet"
 	"github.com/superp00t/etc"
 	"github.com/superp00t/etc/yo"
@@ -42,6 +43,7 @@ func getb(url string, gz bool) *etc.Buffer {
 	}
 
 	f.SeekR(0)
+	h.Close()
 
 	return f
 }
@@ -56,6 +58,8 @@ func updateBlockedRanges() {
 	f := getb(BlockList, true)
 
 	ee := bufio.NewReader(f)
+
+	bar := pb.StartNew(466000)
 
 	for i := uint64(0); ; i++ {
 		str, err := ee.ReadString('\n')
@@ -88,9 +92,10 @@ func updateBlockedRanges() {
 		br.Max = bnet.ParseIPv4(rng[1]).Uint32()
 
 		DB.Insert(br)
-
-		yo.Println("Inserted block", i, br.RangeName)
+		bar.Increment()
 	}
+
+	bar.Finish()
 
 	f.Delete()
 }
