@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -392,6 +393,7 @@ func main() {
 	yo.AddSubroutine("install-databases", nil, "remove all current data and upload blocklists, proxy lists and other data", func(args []string) {
 		initDB()
 
+		DB.DropTables(new(SocksServer))
 		_, list, err := bnet.Req(false, "GET", SocksList, nil)
 		if err != nil {
 			yo.Fatal(err)
@@ -406,14 +408,18 @@ func main() {
 				break
 			}
 
-			yo.Println('"', str, '"')
-			// DB.Insert(&SocksServer{
-			// 	Address:     v,
-			// 	Online:      false,
-			// 	LastUpdated: time.Now(),
-			// })
+			r := strings.TrimRight(str, "\n")
+
+			DB.Insert(&SocksServer{
+				Address:     r,
+				Online:      false,
+				LastUpdated: time.Now(),
+			})
 		}
 
+		list.Close()
+
+		updateMaxmindDBs()
 		updateBlockedRanges()
 	})
 
