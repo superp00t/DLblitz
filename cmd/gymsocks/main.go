@@ -84,11 +84,13 @@ func scan() {
 		for _, v := range []string{
 			"192.171.248.203:42599", "192.171.248.254:42599", "206.223.246.5:42599", "206.223.248.104:42599", "77.108.238.126:39880", "206.223.248.141:42599", "64.118.87.48:23641", "88.220.122.198:39880", "87.247.116.178:39880", "92.222.252.50:10080", "188.166.33.15:9050", "37.187.117.120:10080", "213.136.76.183:9626", "119.28.226.136:1080", "94.156.189.12:9050", "103.254.52.9:39880", "80.211.30.20:9050", "195.154.54.86:10080", "103.250.157.39:6667", "188.40.129.184:8080",
 		} {
-			DB.Insert(&SocksServer{
-				Address:     v,
-				Online:      isOnline(v),
-				LastUpdated: time.Now(),
-			})
+			go func(v string) {
+				DB.Insert(&SocksServer{
+					Address:     v,
+					Online:      isOnline(v),
+					LastUpdated: time.Now(),
+				})
+			}(v)
 		}
 	}
 
@@ -186,9 +188,12 @@ func main() {
 	yo.Init()
 }
 
-const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">	<title>Socks5 IP Checker</title><style>.tblview{max-width: 500px; display: block; margin: auto;} .mon{font-family: "monospace";}</style><link rel="stylesheet" href="//img.ikrypto.club/bootstrap.css"/></head><body>
+const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Socks5 IP Checker</title><style>.wrn{color: #ef1325;}.okc{color: #008e04;}.tblview{max-width: 500px; display: block; margin: auto;}.mon{font-family: "monospace";}</style><link rel="stylesheet" href="//img.ikrypto.club/bootstrap.css"/></head><body>
 <div class="tblview">
-<h3>Socks5 Proxy Checker</h3>
+<h3>Gymsocks</h3>
+<img src="//img.ikrypto.club/gymsocks.png"/>
+<h5><i>Tracking stinky Socks5 servers</i></h5>
+<p class="wrn">Warning: some of these proxies may be run by malicious entities, including governments, lawyers, and private hackers. Do not use these for any purpose other than research and experimentation. For free anonymous browsing, I recommend <a href="https://torproject.org">The Tor Project.</a></p>
 <p><a href="online">Bulk export list of newline separated online Socks5 servers</a></p>
 <p><a href="servers">Bulk export list of all Socks5 servers in JSON formatted metadata, online or not</a></p>
 <table class="table">
@@ -205,7 +210,7 @@ const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewpo
 <tr>
 <th scope="row">{{.Id}}</th>
 <td><p class="mon">{{.Address}}</p></td>
-<td>{{if .Online}}<span️ style="color: #008e04;">✔</span>{{else}}<span️ style="color: #ef1325;">❌</span>{{end}} </td>
+<td>{{if .Online}}<span️ class="okc">✔</span>{{else}}<span️ class="wrn">❌</span>{{end}} </td>
 <td>{{.LastUpdated}}</td>
 </tr>
 {{end}}
