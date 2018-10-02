@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -10,7 +9,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 	"time"
 
@@ -393,32 +391,7 @@ func main() {
 	yo.AddSubroutine("install-databases", nil, "remove all current data and upload blocklists, proxy lists and other data", func(args []string) {
 		initDB()
 
-		DB.DropTables(new(SocksServer))
-		_, list, err := bnet.Req(false, "GET", SocksList, nil)
-		if err != nil {
-			yo.Fatal(err)
-		}
-
-		buf := bufio.NewReader(list)
-
-		for {
-			str, err := buf.ReadString('\n')
-			if err != nil {
-				yo.Println(err)
-				break
-			}
-
-			r := strings.TrimRight(str, "\n")
-
-			DB.Insert(&SocksServer{
-				Address:     r,
-				Online:      false,
-				LastUpdated: time.Now(),
-			})
-		}
-
-		list.Close()
-
+		updateSocksList()
 		updateMaxmindDBs()
 		updateBlockedRanges()
 	})
@@ -426,6 +399,11 @@ func main() {
 	yo.AddSubroutine("update-blocked-ranges", nil, "update blocked IP spaces from blocklist server", func(args []string) {
 		initDB()
 		updateBlockedRanges()
+	})
+
+	yo.AddSubroutine("update-socks-list", nil, "update SOCKS5 IP list", func(args []string) {
+		initDB()
+		updateSocksList()
 	})
 
 	yo.AddSubroutine("serve", []string{"address"}, "serve socks address info over HTTP", func(args []string) {

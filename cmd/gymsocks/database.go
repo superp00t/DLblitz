@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cheggaaa/pb"
 	"github.com/superp00t/DLblitz/bnet"
@@ -203,4 +204,36 @@ func updateMaxmindDBs() {
 	}
 
 	f.Delete()
+}
+
+func updateSocksList() {
+	DB.DropTables(new(SocksServer))
+	DB.Sync2(new(SocksServer))
+
+	_, list, err := bnet.Req(false, "GET", SocksList, nil)
+	if err != nil {
+		yo.Fatal(err)
+	}
+
+	buf := bufio.NewReader(list)
+
+	for {
+		str, err := buf.ReadString('\n')
+		if err != nil {
+			yo.Println(err)
+			break
+		}
+
+		r := strings.TrimRight(str, "\n")
+
+		DB.Insert(&SocksServer{
+			Address:     r,
+			Online:      false,
+			LastUpdated: time.Now(),
+		})
+
+		yo.Println(r)
+	}
+
+	list.Close()
 }
