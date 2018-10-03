@@ -329,7 +329,7 @@ func scannerWorker(ch chan SocksServer) {
 
 		// Check whether this server supports UDP.
 		uping, uonline := checkUDPAbility(v.Address)
-		yo.Warn(v.Address, "status results", ping, uping)
+		yo.Warn(v.Address, "status results", online, uonline)
 
 		if !uonline || !online {
 			v.Online = false
