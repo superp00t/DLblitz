@@ -565,6 +565,8 @@ func main() {
 					return
 				}
 
+				yo.Println("UDP Check Server: read", i, "bytes from", addr)
+
 				go func(b []byte, n net.Addr) {
 					if len(b) < 100 {
 						return
