@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"net"
 	"os"
 
 	"github.com/superp00t/DLblitz/s5"
@@ -9,7 +10,9 @@ import (
 )
 
 func main() {
-	yo.AddSubroutine("connect", []string{"server", "remote"}, "connect to a socks5 server and send/recv UDP data", func(args []string) {
+	yo.Boolf("u", "udp", "udp mode")
+
+	yo.AddSubroutine("connect", []string{"server", "remote"}, "connect to a socks5 server and send/recv data", func(args []string) {
 		dl, err := s5.NewDialer(args[0], "", "")
 		if err != nil {
 			yo.Fatal(err)
@@ -17,21 +20,45 @@ func main() {
 
 		yo.Spew(dl)
 
-		pc, err := dl.ListenUDP()
-		if err != nil {
-			yo.Fatal(err)
+		var pc *s5.Conn
+		if yo.BoolG("u") {
+			var err error
+			pc, err = dl.ListenUDP()
+			if err != nil {
+				yo.Fatal(err)
+			}
+		} else {
+			c, err := dl.Dial("tcp", args[1])
+			if err != nil {
+				yo.Fatal(err)
+			}
+
+			pc = c.(*s5.Conn)
 		}
 
 		go func() {
 			for {
-				n := make([]byte, 5000)
-				i, addr, err := pc.ReadFrom(n)
-				if err != nil {
-					yo.Fatal(err)
-				}
+				var i int
+				n := make([]byte, 63356)
+				if !yo.BoolG("u") {
+					var err error
+					i, err = pc.Read(n)
+					if err != nil {
+						yo.Fatal(err)
+					}
+					yo.Println("read", i, "bytes")
+				} else {
+					var err error
+					var addr net.Addr
+					i, addr, err = pc.ReadFrom(n)
+					if err != nil {
+						yo.Fatal(err)
+					}
 
-				yo.Println("Read", i, "bytes from", addr)
-				yo.Spew(n[:i])
+					yo.Println("Read", i, "bytes from", addr)
+					yo.Spew(n[:i])
+
+				}
 			}
 		}()
 
@@ -48,9 +75,16 @@ func main() {
 				yo.Fatal(err)
 			}
 
-			_, err = pc.WriteTo([]byte(str), target)
-			if err != nil {
-				yo.Fatal(err)
+			if yo.BoolG("u") {
+				_, err = pc.WriteTo([]byte(str), target)
+				if err != nil {
+					yo.Fatal(err)
+				}
+			} else {
+				_, err := pc.Write([]byte(str))
+				if err != nil {
+					yo.Fatal(err)
+				}
 			}
 		}
 	})

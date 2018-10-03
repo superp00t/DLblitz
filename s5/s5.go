@@ -248,7 +248,7 @@ func parseIP(src string) (string, uint16, error) {
 	}
 
 	addr := s[0]
-	i, err := strconv.ParseInt(s[1], 0, 16)
+	i, err := strconv.ParseInt(s[1], 0, 64)
 	if err != nil {
 		return "", 0, err
 	}
@@ -319,7 +319,7 @@ func (c *Conn) Write(b []byte) (int, error) {
 
 func (c *Conn) Read(b []byte) (int, error) {
 	if c.Type == TCPStream {
-		return c.c.Write(b)
+		return c.c.Read(b)
 	}
 
 	return 0, fmt.Errorf("s5: use ReadFrom for UDP mode")
