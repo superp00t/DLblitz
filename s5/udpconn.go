@@ -72,6 +72,7 @@ func (c *Conn) ReadFrom(b []byte) (int, net.Addr, error) {
 		if pip == nil {
 			l, err := net.LookupHost(ip)
 			if err != nil {
+				yo.Warn("Could not lookup IP of", ip, err)
 				return 0, nil, err
 			}
 			if len(l) == 0 {
