@@ -326,6 +326,9 @@ func (c *Conn) Read(b []byte) (int, error) {
 }
 
 func (c *Conn) Close() error {
+	if c.Type == UDPBind {
+		c.LocalUDP.Close()
+	}
 	return c.c.Close()
 }
 

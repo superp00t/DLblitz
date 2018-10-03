@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/superp00t/DLblitz/bnet"
+	"github.com/superp00t/DLblitz/s5"
 	"golang.org/x/crypto/nacl/box"
 
 	"github.com/superp00t/etc"
@@ -156,7 +157,7 @@ func checkUDPAbility(socks5server string) (int64, bool) {
 	start := time.Now()
 
 	go func() {
-		prox, err := bnet.AcquireProxy(socks5server)
+		prox, err := s5.NewDialer(socks5server, "", "")
 		if err != nil {
 			cancel <- struct{}{}
 			return
@@ -186,16 +187,27 @@ func checkUDPAbility(socks5server string) (int64, bool) {
 
 		start = time.Now()
 
-		conn, err := prox("udp", udpNet())
+		conn, err := prox.ListenUDP()
 		if err != nil {
 			yo.Println("UDP failed on", socks5server, err)
 			cancel <- struct{}{}
 			return
 		}
 
+		adr, err := s5.ResolveUDPEndpoint(udpNet())
+		if err != nil {
+			yo.Warn(err)
+			cancel <- struct{}{}
+			conn.Close()
+			return
+		}
+
 		for x := 0; x < 10; x++ {
-			conn.Write(env.Bytes())
-			time.Sleep(2 * time.Second)
+			_, err := conn.WriteTo(env.Bytes(), adr)
+			if err != nil {
+				yo.Fatal(err)
+			}
+			time.Sleep(800 * time.Millisecond)
 		}
 	}()
 
