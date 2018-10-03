@@ -153,6 +153,7 @@ func checkUDPAbility(socks5server string) (int64, bool) {
 	rs := make(chan bool)
 	cancel := make(chan struct{})
 
+	yo.Println("Storing UDP token", confirmationToken)
 	Bucket.Store(confirmationToken.String(), rs)
 	start := time.Now()
 
