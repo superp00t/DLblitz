@@ -377,6 +377,7 @@ func scan() {
 		for _, v := range ss {
 			c <- v
 		}
+		time.Sleep(1 * time.Minute)
 	}
 }
 
