@@ -220,6 +220,7 @@ func checkUDPAbility(socks5server string) (int64, bool) {
 	case <-rs:
 		close(rs)
 		Bucket.Delete(confirmationToken.String())
+		yo.Fatal("success")
 		return int64(time.Since(start) / time.Millisecond), true
 	case <-cancel:
 		return 0, false
