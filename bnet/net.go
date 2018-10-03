@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/cheggaaa/pb"
+	"github.com/superp00t/DLblitz/s5"
 	"github.com/superp00t/etc/yo"
-	"golang.org/x/net/proxy"
 )
 
 var (
@@ -128,7 +128,7 @@ func HReq(h *http.Client, method, url string, body io.ReadCloser) (int, *ReqRead
 }
 
 func AcquireProxy(urls string) (func(string, string) (net.Conn, error), error) {
-	dl, err := proxy.SOCKS5("tcp", urls, nil, proxy.Direct)
+	dl, err := s5.NewDialer(urls, "", "")
 	if err != nil {
 		return nil, err
 	}
