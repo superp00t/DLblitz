@@ -578,7 +578,7 @@ func main() {
 					}
 
 					peerk := new([32]byte)
-					copy(pk[:], b[:32])
+					copy(peerk[:], b[:32])
 
 					nc := new([24]byte)
 
