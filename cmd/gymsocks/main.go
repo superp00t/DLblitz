@@ -329,6 +329,8 @@ func scannerWorker(ch chan SocksServer) {
 
 		// Check whether this server supports UDP.
 		uping, uonline := checkUDPAbility(v.Address)
+		yo.Warn(v.Address, "status results", ping, uping)
+
 		if !uonline || !online {
 			v.Online = false
 			v.LastUpdated = time.Now()
@@ -339,8 +341,6 @@ func scannerWorker(ch chan SocksServer) {
 			}
 			continue
 		}
-
-		yo.Warn(v.Address, "status results", ping, uping)
 
 		ct := int64(2)
 		pingSum := ping + uping
