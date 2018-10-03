@@ -87,7 +87,7 @@ func (c *Conn) ReadFrom(b []byte) (int, net.Addr, error) {
 		}
 
 		bd := e.ReadRemainder()
-		wr := copy(b, bd)
+		wr := copy(b, bd[:len(bd)-2])
 
 		return wr, remoteAddr, nil
 	}
