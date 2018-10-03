@@ -205,9 +205,12 @@ func checkUDPAbility(socks5server string) (int64, bool) {
 		for x := 0; x < 10; x++ {
 			_, err := conn.WriteTo(env.Bytes(), adr)
 			if err != nil {
-				yo.Fatal(err)
+				yo.Warn(err)
+				cancel <- struct{}{}
+				conn.Close()
+				return
 			}
-			time.Sleep(800 * time.Millisecond)
+			time.Sleep(400 * time.Millisecond)
 		}
 	}()
 
