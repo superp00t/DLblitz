@@ -95,7 +95,7 @@ func (d *Dialer) Dial(network, address string) (net.Conn, error) {
 	switch network {
 	case "tcp":
 	case "udp":
-		return nil, fmt.Errorf("s5: you need to use Dialer.UDPSocket() to use UDP")
+		return nil, fmt.Errorf("s5: you need to use Dialer.ListenUDP() to use UDP")
 	}
 
 	return d.CreateConn(network, address)

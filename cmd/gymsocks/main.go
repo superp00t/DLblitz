@@ -210,6 +210,7 @@ func checkUDPAbility(socks5server string) (int64, bool) {
 				conn.Close()
 				return
 			}
+			yo.Println("transmitting packet with", env.Size(), "bytes")
 			time.Sleep(400 * time.Millisecond)
 		}
 	}()
