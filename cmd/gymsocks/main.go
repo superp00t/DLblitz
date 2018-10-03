@@ -144,7 +144,7 @@ func httpNet() string {
 		yo.Fatal(err)
 	}
 
-	return fmt.Sprintf("http://%s:%d/check", u.Hostname, yo.Int64G("t"))
+	return fmt.Sprintf("http://%s:%d/check", u.Hostname(), yo.Int64G("t"))
 }
 
 func checkUDPAbility(socks5server string) (int64, bool) {
