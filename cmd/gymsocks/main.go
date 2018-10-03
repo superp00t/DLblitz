@@ -572,6 +572,7 @@ func main() {
 
 				go func(b []byte, n net.Addr) {
 					if len(b) < 100 {
+						yo.Println("UCS: too small")
 						return
 					}
 
@@ -583,6 +584,7 @@ func main() {
 					copy(nc[:], b[32:32+24])
 					msg, ok := box.Open(nil, buf[32+24:i], nc, peerk, sk)
 					if !ok {
+						yo.Println("UCS: Packet encryption malformed")
 						return
 					}
 
@@ -591,12 +593,15 @@ func main() {
 
 					ifa, ok := Bucket.Load(token.String())
 					if !ok {
+						yo.Println("UCS: could not load token", token)
 						return
 					}
 
 					i, ok := ifa.(chan bool)
 					if ok {
 						i <- true
+					} else {
+						yo.Println("UCS: failure to convert to chan bool")
 					}
 				}(buf[:i], addr)
 
