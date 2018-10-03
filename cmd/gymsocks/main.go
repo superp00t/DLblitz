@@ -134,7 +134,7 @@ func udpNet() string {
 		yo.Fatal(err)
 	}
 
-	return fmt.Sprintf("%s:%d", u.Hostname, yo.Int64G("u"))
+	return fmt.Sprintf("%s:%d", u.Hostname(), yo.Int64G("u"))
 }
 
 func httpNet() string {
@@ -196,7 +196,7 @@ func checkUDPAbility(socks5server string) (int64, bool) {
 
 		adr, err := s5.ResolveUDPEndpoint(udpNet())
 		if err != nil {
-			yo.Warn(err)
+			yo.Warn("Failure to lookup", udpNet(), err)
 			cancel <- struct{}{}
 			conn.Close()
 			return

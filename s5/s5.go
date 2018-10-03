@@ -335,7 +335,7 @@ func (c *Conn) Close() error {
 func (c *Conn) LocalAddr() net.Addr {
 	t, err := net.ResolveTCPAddr("tcp", c.Dialer.Endpoint)
 	if err != nil {
-		yo.Warn(err)
+		yo.Warn("LocalAddr()", err)
 		return nil
 	}
 
@@ -349,7 +349,7 @@ func (c *Conn) RemoteAddr() net.Addr {
 
 	t, err := net.ResolveTCPAddr("tcp", c.Address)
 	if err != nil {
-		yo.Warn(err)
+		yo.Warn("LocalAddr()", err)
 		return nil
 	}
 
