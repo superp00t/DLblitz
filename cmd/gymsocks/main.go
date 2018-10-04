@@ -525,7 +525,7 @@ func main() {
 
 				for _, rg := range []string{"US", "AU", "UM", "VI", "NZ", "GB", "CA"} {
 					if cn == rg {
-						cn = fmt.Sprintf(`<span class="skull" alt="%s"></span>`, cn)
+						cn = fmt.Sprintf(`<img class="skull" alt="%s"></img>`, cn)
 						break
 					}
 				}
