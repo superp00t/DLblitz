@@ -389,8 +389,9 @@ func scan() {
 }
 
 func getCountry(address string) string {
+	ip := bnet.ParseIPv4(address).Uint32()
 	var s []GeoipBlocks
-	err := DB.Where("max >= ?").Where("min <= ?").Find(&s)
+	err := DB.Where("max >= ?", ip).Where("min <= ?", ip).Find(&s)
 	if err != nil {
 		yo.Fatal(err)
 	}
