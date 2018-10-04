@@ -534,7 +534,7 @@ func main() {
 				cn := ""
 
 				for _, rg := range []string{"US", "AU", "UM", "VI", "NZ", "GB", "CA"} {
-					if cn == rg {
+					if v.Country == rg {
 						cn = fmt.Sprintf(`<img src="//img.ikrypto.club/skull.png" alt="%s"/>`, cn)
 						break
 					}
