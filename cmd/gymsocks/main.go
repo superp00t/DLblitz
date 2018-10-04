@@ -392,6 +392,7 @@ func scan() {
 func getCountry(address string) string {
 	str := strings.Split(address, ":")
 	if len(str) != 2 {
+		yo.Println("invalid address length", address, len(str))
 		return "US"
 	}
 	ip := bnet.ParseIPv4(str[0]).Uint32()
@@ -401,6 +402,7 @@ func getCountry(address string) string {
 		yo.Fatal(err)
 	}
 	if len(s) == 0 {
+		yo.Println("Could not find country of ", address)
 		return "US"
 	}
 
