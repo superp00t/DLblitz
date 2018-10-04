@@ -36,18 +36,20 @@ const (
 )
 
 type SocksServer struct {
-	Id          int64     `json:"id"`
+	Id          int64     `json:"-"`
 	Address     string    `json:"addr"`
 	Online      bool      `json:"online"`
 	Ping        int64     `json:"ping"`
 	LastUpdated time.Time `json:"lastUpdated"`
+	Country     string    `json:"country"`
 }
 
 type SocksTpl struct {
 	Address     string
 	Online      bool
-	Regime      template.HTML
 	Ping        string
+	Country     string
+	Regime      template.HTML
 	LastUpdated string
 }
 
@@ -76,7 +78,7 @@ type GeoipLocation struct {
 }
 
 type GeoipBlocks struct {
-	Min   uint32 `xorm:"autoincr 'min'"`
+	Min   uint32 `xorm:"autoincr pk 'min'"`
 	Max   uint32 `xorm:"max"`
 	LocID uint32 `xorm:"'locId'"`
 }
@@ -333,6 +335,7 @@ func scannerWorker(ch chan SocksServer) {
 		yo.Warn(v.Address, "status results", online, uonline)
 
 		if !uonline || !online {
+			v.Country = getCountry(v.Address)
 			v.Online = false
 			v.LastUpdated = time.Now()
 			v.Ping = -1
@@ -358,7 +361,7 @@ func scannerWorker(ch chan SocksServer) {
 		}
 
 		avgPing := pingSum / ct
-
+		v.Country = getCountry(v.Address)
 		v.Online = true
 		v.LastUpdated = time.Now()
 		v.Ping = avgPing
@@ -528,7 +531,7 @@ func main() {
 					png = fmt.Sprintf("%dms", v.Ping)
 				}
 
-				cn := getCountry(v.Address)
+				cn := ""
 
 				for _, rg := range []string{"US", "AU", "UM", "VI", "NZ", "GB", "CA"} {
 					if cn == rg {
@@ -540,8 +543,9 @@ func main() {
 				ss[i] = SocksTpl{
 					v.Address,
 					v.Online,
-					template.HTML(cn),
 					png,
+					v.Country,
+					template.HTML(cn),
 					pt.Format(v.LastUpdated),
 				}
 			}
@@ -658,7 +662,7 @@ const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewpo
 <h5><i>Tracking stinky Socks5 servers</i></h5>
 <p class="wrn">Warning: some of these proxies may be run by malicious entities, including governments, lawyers, and private hackers. Do not use these for any purpose other than research and experimentation. For free anonymous browsing, I recommend <a href="https://torproject.org">The Tor Project.</a></p>
 <p>A server is considered "online" if it completes both a TLS and a UDP connectivity check, ensuring that it is useful for both secure browsing and P2P applications including WebRTC voice chat in your web browser.</p>
-<p>If a server's country entry is marked <span class="skull"></span>, it is located in a country that is a part of the <a href="https://en.wikipedia.org/wiki/UKUSA_Agreement">Five Eyes surveillance regime.</a></p>
+<p>If a server's Regime entry is marked with a skull, it is located in a country that is a part of the <a href="https://en.wikipedia.org/wiki/UKUSA_Agreement">Five Eyes surveillance regime.</a></p>
 <p><a href="online">Bulk export list of newline separated online Socks5 servers</a></p>
 <p><a href="servers">Bulk export list of all Socks5 servers in JSON formatted metadata, online or not</a></p>
 <table class="table">
@@ -666,8 +670,9 @@ const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewpo
     <tr>
       <th scope="col">IP Address</th>
       <th scope="col">Online</th>
-      <th scope="col">Country</th>
       <th scope="col">Ping</th>
+      <th scope="col">Country</th>
+      <th scope="col">Regime</th>
       <th scope="col">Last Checked</th>
     </tr>
 	</thead>
@@ -676,8 +681,9 @@ const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewpo
 <tr>
 <td><p class="mon">{{.Address}}</p></td>
 <td>{{if .Online}}<span️ class="okc">✔</span>{{else}}<span️ class="wrn">❌</span>{{end}} </td>
-<td>{{.Regime}}</td>
 <td>{{.Ping}}</td>
+<td>{{.Country}}
+<td>{{.Regime}}</td>
 <td>{{.LastUpdated}}</td>
 </tr>
 {{end}}
