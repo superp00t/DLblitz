@@ -402,7 +402,7 @@ func getCountry(address string) string {
 		yo.Fatal(err)
 	}
 	if len(s) == 0 {
-		yo.Println("Could not find country of ", address)
+		yo.Println("Could not find country of ", address, ip)
 		return "US"
 	}
 
