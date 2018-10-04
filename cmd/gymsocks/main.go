@@ -391,7 +391,7 @@ func scan() {
 func getCountry(address string) string {
 	ip := bnet.ParseIPv4(address).Uint32()
 	var s []GeoipBlocks
-	err := DB.Where("max >= ?", ip).Where("min <= ?", ip).Find(&s)
+	err := DB.Where("? <= max", ip).Where("? >= min", ip).Find(&s)
 	if err != nil {
 		yo.Fatal(err)
 	}
@@ -644,7 +644,7 @@ func main() {
 	yo.Init()
 }
 
-const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Socks5 IP Checker</title><style>.skull{background-image: "//img.ikrypto.club/skull.png";}.wrn{color: #ef1325;}.okc{color: #008e04;}.tblview{max-width: 500px; display: block; margin: auto;}.mon{font-family: "monospace";}</style><link rel="stylesheet" href="//img.ikrypto.club/bootstrap.css"/></head><body>
+const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Socks5 IP Checker</title><style>.skull{background-image: url("//img.ikrypto.club/skull.png");}.wrn{color: #ef1325;}.okc{color: #008e04;}.tblview{max-width: 500px; display: block; margin: auto;}.mon{font-family: "monospace";}</style><link rel="stylesheet" href="//img.ikrypto.club/bootstrap.css"/></head><body>
 <div class="tblview">
 <h3>Gymsocks</h3>
 <img style="width: 128px; height: 128px;" src="//img.ikrypto.club/gymsocks.png"/>
