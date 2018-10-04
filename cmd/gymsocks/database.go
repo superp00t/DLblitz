@@ -21,7 +21,7 @@ import (
 // Download a file over HTTP to a temporary directory and return the file handle. Will halt process if error is discovered.
 func getb(url string, gz bool) *etc.Buffer {
 	cl := &http.Client{}
-	_, h, err := bnet.HReq(cl, "GET", url, nil)
+	_, h, err := bnet.HReq(true, cl, "GET", url, nil)
 	if err != nil {
 		yo.Fatal(err)
 	}

@@ -43,9 +43,9 @@ type SocksServer struct {
 }
 
 type SocksTpl struct {
-	Id          int64
 	Address     string
 	Online      bool
+	Regime      template.HTML
 	Ping        string
 	LastUpdated string
 }
@@ -101,7 +101,7 @@ func checkHTTPSStatus(socks5server string) (int64, bool) {
 			return
 		}
 
-		st, _, err := bnet.HReq(hc, "GET", yo.StringG("c")+"/cb/"+confirmationToken, nil)
+		st, _, err := bnet.HReq(false, hc, "GET", yo.StringG("c")+"/cb/"+confirmationToken, nil)
 		if err != nil || st != 200 {
 			cancel <- struct{}{}
 			return
@@ -388,6 +388,19 @@ func scan() {
 	}
 }
 
+func getCountry(address string) string {
+	var s []GeoipBlocks
+	DB.Where("max >= ?").Where("min <= ?").Find(&s)
+	if len(s) == 0 {
+		return "US"
+	}
+
+	var y []GeoipLocation
+	DB.Where("locId = ?", s[0].LocID).Find(&y)
+
+	return y[0].Country
+}
+
 var sk, pk *[32]byte
 
 func main() {
@@ -495,7 +508,7 @@ func main() {
 
 		r.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 			var sn []SocksServer
-			DB.Find(&sn)
+			DB.Desc("online").Find(&sn)
 			ss := make([]SocksTpl, len(sn))
 
 			for i, v := range sn {
@@ -504,10 +517,19 @@ func main() {
 					png = fmt.Sprintf("%dms", v.Ping)
 				}
 
+				cn := getCountry(v.Address)
+
+				for _, rg := range []string{"US", "AU", "UM", "VI", "NZ", "GB", "CA"} {
+					if cn == rg {
+						cn = fmt.Sprintf(`<span class="skull" alt="%s"></span>`, cn)
+						break
+					}
+				}
+
 				ss[i] = SocksTpl{
-					v.Id,
 					v.Address,
 					v.Online,
+					template.HTML(cn),
 					png,
 					pt.Format(v.LastUpdated),
 				}
@@ -618,20 +640,22 @@ func main() {
 	yo.Init()
 }
 
-const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Socks5 IP Checker</title><style>.wrn{color: #ef1325;}.okc{color: #008e04;}.tblview{max-width: 500px; display: block; margin: auto;}.mon{font-family: "monospace";}</style><link rel="stylesheet" href="//img.ikrypto.club/bootstrap.css"/></head><body>
+const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Socks5 IP Checker</title><style>.skull{background-image: "//img.ikrypto.club/skull.png";}.wrn{color: #ef1325;}.okc{color: #008e04;}.tblview{max-width: 500px; display: block; margin: auto;}.mon{font-family: "monospace";}</style><link rel="stylesheet" href="//img.ikrypto.club/bootstrap.css"/></head><body>
 <div class="tblview">
 <h3>Gymsocks</h3>
 <img style="width: 128px; height: 128px;" src="//img.ikrypto.club/gymsocks.png"/>
 <h5><i>Tracking stinky Socks5 servers</i></h5>
 <p class="wrn">Warning: some of these proxies may be run by malicious entities, including governments, lawyers, and private hackers. Do not use these for any purpose other than research and experimentation. For free anonymous browsing, I recommend <a href="https://torproject.org">The Tor Project.</a></p>
+<p>A server is considered "online" if it completes both a TLS and a UDP connectivity check, ensuring that it is useful for both secure browsing and P2P applications including WebRTC voice chat in your web browser.</p>
+<p>If a server's country entry is marked <span class="skull"></span>, it is located in a country that is a part of the <a href="https://en.wikipedia.org/wiki/UKUSA_Agreement">Five Eyes surveillance regime.</a></p>
 <p><a href="online">Bulk export list of newline separated online Socks5 servers</a></p>
 <p><a href="servers">Bulk export list of all Socks5 servers in JSON formatted metadata, online or not</a></p>
 <table class="table">
   <thead>
     <tr>
-      <th scope="col">ID</th>
       <th scope="col">IP Address</th>
       <th scope="col">Online</th>
+      <th scope="col">Country</th>
       <th scope="col">Ping</th>
       <th scope="col">Last Checked</th>
     </tr>
@@ -639,9 +663,9 @@ const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewpo
 	<tbody>
 {{range .}}
 <tr>
-<th scope="row">{{.Id}}</th>
 <td><p class="mon">{{.Address}}</p></td>
 <td>{{if .Online}}<span️ class="okc">✔</span>{{else}}<span️ class="wrn">❌</span>{{end}} </td>
+<td>{{.Regime}}
 <td>{{.Ping}}
 <td>{{.LastUpdated}}</td>
 </tr>

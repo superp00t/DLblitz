@@ -85,7 +85,7 @@ func (r *ReqReader) Close() error {
 	return r.proxy.Close()
 }
 
-func Req(forceAnonymity bool, method, url string, body io.ReadCloser) (int, *ReqReader, error) {
+func Req(showProgress bool, forceAnonymity bool, method, url string, body io.ReadCloser) (int, *ReqReader, error) {
 	if forceAnonymity && !torEnabled {
 		return 0, nil, fmt.Errorf("Tor could not be enabled")
 	}
@@ -101,11 +101,11 @@ func Req(forceAnonymity bool, method, url string, body io.ReadCloser) (int, *Req
 		}
 	}
 
-	return HReq(cl, method, url, body)
+	return HReq(showProgress, cl, method, url, body)
 
 }
 
-func HReq(h *http.Client, method, url string, body io.ReadCloser) (int, *ReqReader, error) {
+func HReq(showProgress bool, h *http.Client, method, url string, body io.ReadCloser) (int, *ReqReader, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return 0, nil, err
