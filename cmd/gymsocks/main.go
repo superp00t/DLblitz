@@ -339,7 +339,7 @@ func scannerWorker(ch chan SocksServer) {
 			v.Online = false
 			v.LastUpdated = time.Now()
 			v.Ping = -1
-			_, err := DB.Id(v.Id).Cols("online", "last_updated", "ping").Update(v)
+			_, err := DB.Id(v.Id).Cols("online", "last_updated", "ping", "country").Update(v)
 			if err != nil {
 				yo.Println(err)
 			}
@@ -366,7 +366,7 @@ func scannerWorker(ch chan SocksServer) {
 		v.LastUpdated = time.Now()
 		v.Ping = avgPing
 
-		_, err := DB.Id(v.Id).Cols("online", "last_updated", "ping").Update(v)
+		_, err := DB.Id(v.Id).Cols("online", "last_updated", "ping", "country").Update(v)
 		if err != nil {
 			yo.Println(err)
 		}
