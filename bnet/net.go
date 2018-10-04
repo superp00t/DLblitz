@@ -74,13 +74,20 @@ func init() {
 type ReqReader struct {
 	bar   *pb.ProgressBar
 	proxy *pb.Reader
+	rd    io.ReadCloser
 }
 
 func (r *ReqReader) Read(b []byte) (int, error) {
+	if r.rd != nil {
+		return r.rd.Read(b)
+	}
 	return r.proxy.Read(b)
 }
 
 func (r *ReqReader) Close() error {
+	if r.rd != nil {
+		return r.rd.Close()
+	}
 	r.bar.Finish()
 	return r.proxy.Close()
 }
@@ -102,7 +109,6 @@ func Req(showProgress bool, forceAnonymity bool, method, url string, body io.Rea
 	}
 
 	return HReq(showProgress, cl, method, url, body)
-
 }
 
 func HReq(showProgress bool, h *http.Client, method, url string, body io.ReadCloser) (int, *ReqReader, error) {
@@ -122,7 +128,12 @@ func HReq(showProgress bool, h *http.Client, method, url string, body io.ReadClo
 	bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES)
 	bar.Start()
 
-	rr := &ReqReader{bar, bar.NewProxyReader(resp.Body)}
+	var rr *ReqReader
+	if showProgress {
+		rr = &ReqReader{bar, bar.NewProxyReader(resp.Body), nil}
+	} else {
+		rr = &ReqReader{nil, nil, resp.Body}
+	}
 
 	return resp.StatusCode, rr, err
 }
