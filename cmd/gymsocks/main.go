@@ -671,9 +671,9 @@ const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewpo
       <th scope="col">IP Address</th>
       <th scope="col">Online</th>
       <th scope="col">Ping</th>
+      <th scope="col">Last Checked</th>
       <th scope="col">Country</th>
       <th scope="col">Regime</th>
-      <th scope="col">Last Checked</th>
     </tr>
 	</thead>
 	<tbody>
@@ -682,9 +682,9 @@ const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewpo
 <td><p class="mon">{{.Address}}</p></td>
 <td>{{if .Online}}<span️ class="okc">✔</span>{{else}}<span️ class="wrn">❌</span>{{end}} </td>
 <td>{{.Ping}}</td>
-<td>{{.Country}}
-<td>{{.Regime}}</td>
 <td>{{.LastUpdated}}</td>
+<td>{{.Country}}</td>
+<td>{{.Regime}}</td>
 </tr>
 {{end}}
 </tbody>
