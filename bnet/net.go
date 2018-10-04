@@ -125,11 +125,11 @@ func HReq(showProgress bool, h *http.Client, method, url string, body io.ReadClo
 	}
 
 	yo.Println(method, url)
-	bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES)
-	bar.Start()
 
 	var rr *ReqReader
 	if showProgress {
+		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES)
+		bar.Start()
 		rr = &ReqReader{bar, bar.NewProxyReader(resp.Body), nil}
 	} else {
 		rr = &ReqReader{nil, nil, resp.Body}

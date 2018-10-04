@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -389,7 +390,11 @@ func scan() {
 }
 
 func getCountry(address string) string {
-	ip := bnet.ParseIPv4(address).Uint32()
+	str := strings.Split(address, ":")
+	if len(str) != 2 {
+		return "US"
+	}
+	ip := bnet.ParseIPv4(str[0]).Uint32()
 	var s []GeoipBlocks
 	err := DB.Where("? <= max", ip).Where("? >= min", ip).Find(&s)
 	if err != nil {
@@ -525,7 +530,7 @@ func main() {
 
 				for _, rg := range []string{"US", "AU", "UM", "VI", "NZ", "GB", "CA"} {
 					if cn == rg {
-						cn = fmt.Sprintf(`<img class="skull" alt="%s"></img>`, cn)
+						cn = fmt.Sprintf(`<img src="//img.ikrypto.club/skull.png" alt="%s"/>`, cn)
 						break
 					}
 				}
