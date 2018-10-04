@@ -130,6 +130,16 @@ func updateMaxmindDBs() {
 		yo.Fatal(err)
 	}
 
+	locFile, err := etc.FileController(etc.TmpDirectory().Concat(etc.GenerateRandomUUID().String()).Render())
+	if err != nil {
+		yo.Fatal(err)
+	}
+
+	blocFile, err := etc.FileController(etc.TmpDirectory().Concat(etc.GenerateRandomUUID().String()).Render())
+	if err != nil {
+		yo.Fatal(err)
+	}
+
 	for _, fi := range zp.File {
 		if strings.HasSuffix(fi.Name, "GeoLiteCity-Location.csv") {
 			l, err := fi.Open()
@@ -137,42 +147,7 @@ func updateMaxmindDBs() {
 				yo.Fatal(err)
 			}
 
-			yo.Println("Installing GeoIP locations...")
-			bar := pb.New(928138)
-
-			le := bufio.NewReader(l)
-			le.ReadString('\n')
-
-			s := csv.NewReader(le)
-
-			for i := uint64(0); ; i++ {
-				recs, err := s.Read()
-				if err != nil {
-					yo.Println(err)
-					break
-				}
-
-				if i == 0 {
-					continue
-				}
-
-				rec := GeoipLocation{}
-
-				rec.LocID = dec32(recs[0])
-				rec.Country = recs[1]
-				rec.Region = recs[2]
-				rec.City = decMax([]byte(recs[3]))
-				rec.PostalCode = recs[4]
-				rec.Lat = decf(recs[5])
-				rec.Long = decf(recs[6])
-				rec.MetroCode = dec32(recs[7])
-				rec.AreaCode = dec32(recs[8])
-
-				DB.Insert(rec)
-				bar.Increment()
-			}
-
-			bar.Finish()
+			io.Copy(locFile, l)
 		}
 
 		if strings.HasSuffix(fi.Name, "GeoLiteCity-Blocks.csv") {
@@ -181,41 +156,82 @@ func updateMaxmindDBs() {
 				yo.Fatal(err)
 			}
 
-			yo.Println("Installing blocks...")
-			bar := pb.StartNew(157738)
-
-			le := bufio.NewReader(l)
-			le.ReadString('\n')
-
-			s := csv.NewReader(le)
-
-			for i := uint64(0); ; i++ {
-				recs, err := s.Read()
-				if err != nil {
-					yo.Println(err)
-					break
-				}
-
-				if i == 0 {
-					continue
-				}
-
-				rec := GeoipBlocks{}
-
-				rec.Min = dec32(recs[0])
-				rec.Max = dec32(recs[1])
-				rec.LocID = dec32(recs[2])
-
-				DB.Insert(rec)
-				bar.Increment()
-			}
-
-			bar.Finish()
+			io.Copy(blocFile, l)
 		}
 		yo.Println(fi.Name)
 	}
 
+	yo.Println("Installing blocks...")
+	bar := pb.StartNew(157738)
+
+	le := bufio.NewReader(blocFile)
+	le.ReadString('\n')
+
+	s := csv.NewReader(le)
+
+	for i := uint64(0); ; i++ {
+		recs, err := s.Read()
+		if err != nil {
+			yo.Println(err)
+			break
+		}
+
+		if i == 0 {
+			continue
+		}
+
+		rec := GeoipBlocks{}
+
+		rec.Min = dec32(recs[0])
+		rec.Max = dec32(recs[1])
+		rec.LocID = dec32(recs[2])
+
+		DB.Insert(rec)
+		bar.Increment()
+	}
+
+	bar.Finish()
+
+	yo.Println("Installing GeoIP locations...")
+	bar = pb.New(928138)
+
+	le = bufio.NewReader(locFile)
+	le.ReadString('\n')
+
+	s = csv.NewReader(le)
+
+	for i := uint64(0); ; i++ {
+		recs, err := s.Read()
+		if err != nil {
+			yo.Println(err)
+			break
+		}
+
+		if i == 0 {
+			continue
+		}
+
+		rec := GeoipLocation{}
+
+		rec.LocID = dec32(recs[0])
+		rec.Country = recs[1]
+		rec.Region = recs[2]
+		rec.City = decMax([]byte(recs[3]))
+		rec.PostalCode = recs[4]
+		rec.Lat = decf(recs[5])
+		rec.Long = decf(recs[6])
+		rec.MetroCode = dec32(recs[7])
+		rec.AreaCode = dec32(recs[8])
+
+		DB.Insert(rec)
+		bar.Increment()
+	}
+
+	bar.Finish()
+
 	f.Delete()
+	blocFile.Delete()
+	locFile.Delete()
 }
 
 func updateSocksList() {
