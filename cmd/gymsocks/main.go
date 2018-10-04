@@ -76,9 +76,9 @@ type GeoipLocation struct {
 }
 
 type GeoipBlocks struct {
-	Min   uint32 `xorm:"min"`
+	Min   uint32 `xorm:"autoincr 'min'"`
 	Max   uint32 `xorm:"max"`
-	LocID uint32 `xorm:"pk 'locId'"`
+	LocID uint32 `xorm:"'locId'"`
 }
 
 type BlockResult struct {

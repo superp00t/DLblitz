@@ -137,6 +137,9 @@ func updateMaxmindDBs() {
 				yo.Fatal(err)
 			}
 
+			yo.Println("Installing GeoIP locations...")
+			bar := pb.New(928138)
+
 			le := bufio.NewReader(l)
 			le.ReadString('\n')
 
@@ -166,7 +169,10 @@ func updateMaxmindDBs() {
 				rec.AreaCode = dec32(recs[8])
 
 				DB.Insert(rec)
+				bar.Increment()
 			}
+
+			bar.Finish()
 		}
 
 		if strings.HasSuffix(fi.Name, "GeoLiteCity-Blocks.csv") {
@@ -174,6 +180,9 @@ func updateMaxmindDBs() {
 			if err != nil {
 				yo.Fatal(err)
 			}
+
+			yo.Println("Installing blocks...")
+			bar := pb.StartNew(157738)
 
 			le := bufio.NewReader(l)
 			le.ReadString('\n')
@@ -198,7 +207,10 @@ func updateMaxmindDBs() {
 				rec.LocID = dec32(recs[2])
 
 				DB.Insert(rec)
+				bar.Increment()
 			}
+
+			bar.Finish()
 		}
 		yo.Println(fi.Name)
 	}
