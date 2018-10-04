@@ -390,7 +390,10 @@ func scan() {
 
 func getCountry(address string) string {
 	var s []GeoipBlocks
-	DB.Where("max >= ?").Where("min <= ?").Find(&s)
+	err := DB.Where("max >= ?").Where("min <= ?").Find(&s)
+	if err != nil {
+		yo.Fatal(err)
+	}
 	if len(s) == 0 {
 		return "US"
 	}
@@ -665,8 +668,8 @@ const tpl = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewpo
 <tr>
 <td><p class="mon">{{.Address}}</p></td>
 <td>{{if .Online}}<span️ class="okc">✔</span>{{else}}<span️ class="wrn">❌</span>{{end}} </td>
-<td>{{.Regime}}
-<td>{{.Ping}}
+<td>{{.Regime}}</td>
+<td>{{.Ping}}</td>
 <td>{{.LastUpdated}}</td>
 </tr>
 {{end}}
