@@ -388,7 +388,9 @@ func scan() {
 		for _, v := range ss {
 			c <- v
 		}
-		time.Sleep(1 * time.Minute)
+		if len(ss) < 20 {
+			time.Sleep(1 * time.Minute)
+		}
 	}
 }
 
@@ -522,7 +524,7 @@ func main() {
 
 		r.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 			var sn []SocksServer
-			DB.Desc("online").Find(&sn)
+			DB.Desc("online").Limit(512).Find(&sn)
 			ss := make([]SocksTpl, len(sn))
 
 			for i, v := range sn {
